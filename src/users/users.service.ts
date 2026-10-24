@@ -1,9 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
+import { Repository } from 'typeorm/repository/Repository.js';
+import { In } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import type { FindOptionsWhere } from 'typeorm';
 
 @Injectable()
 export class UsersService {
+
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
   create(createUserDto: CreateUserDto) {
     return 'This action adds a new user';
   }
@@ -14,6 +24,10 @@ export class UsersService {
 
   findOne(id: number) {
     return `This action returns a #${id} user`;
+  }
+
+  findOneByOrFail(where: FindOptionsWhere<User>) {
+    return this.userRepository.findOneByOrFail(where);
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {

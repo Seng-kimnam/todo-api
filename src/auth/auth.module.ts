@@ -7,6 +7,8 @@ import { PassportModule } from "@nestjs/passport";
 import { User } from "../users/entities/user.entity";
 import { JwtModule } from '@nestjs/jwt';
 import { Module } from '@nestjs/common';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @Module({
     imports: [PassportModule,
@@ -14,13 +16,14 @@ import { Module } from '@nestjs/common';
       JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (c: ConfigService) => ({
-      secret: c.getOrThrow('JWT_SECRET'),
-      signOptions: { expiresIn: '15m' },
+      secret: c.getOrThrow<string>('JWT_SECRET'),
+      signOptions: { expiresIn: '20m' },
       }),
       }),
     ],
     providers: [AuthService, JwtStrategy  ],
-    controllers: [AuthController]
+    controllers: [AuthController],
+    exports: [AuthService, JwtStrategy, JwtModule]
   }
 )
 export class AuthModule {}

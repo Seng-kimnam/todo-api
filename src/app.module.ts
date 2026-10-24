@@ -9,6 +9,8 @@ import { TodosModule } from './todos/todos.module';
 import { ProfileModule } from './profile/profile.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { APP_GUARD } from '@nestjs/core/constants.js';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
 
 
 @Module({
@@ -34,6 +36,10 @@ import { AuthModule } from './auth/auth.module';
   
   ],
   controllers: [AppController ],
-  providers: [AppService],
+  providers: [
+    AppService,
+{ provide: APP_GUARD, useClass: JwtAuthGuard },
+// { provide: APP_GUARD, useClass: RolesGuard },
+],
 })
 export class AppModule {}
