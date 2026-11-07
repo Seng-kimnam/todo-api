@@ -1,5 +1,6 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
+import { Column } from 'typeorm/decorator/columns/Column.js';
+import { PrimaryGeneratedColumn } from 'typeorm/decorator/columns/PrimaryGeneratedColumn.js';
+import { Entity } from 'typeorm/decorator/entity/Entity.js';
 
 @Entity()
 export class Todo {
@@ -17,10 +18,5 @@ export class Todo {
 
   @Column({ type: 'int', default: 0 })
   position: number;
-  // todo.entity.ts — every to-do has an owner
-  @ManyToOne(() => User, (u) => u.todos)
-  owner: User;
-
-  @Column({ type: 'uuid', nullable: true })
-  ownerId: string;
+ 
 }

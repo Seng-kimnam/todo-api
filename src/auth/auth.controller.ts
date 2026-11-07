@@ -64,7 +64,11 @@ export class AuthController {
 
   @HttpCode(204)
   @Post('logout')
-  logout(@Res({ passthrough: true }) res: Response) {
+  async logout(
+    @CurrentUser() user: AuthUser,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    await this.authService.revokeAll(user.id);
     res.clearCookie('refresh_token', {
       httpOnly: true,
       sameSite: 'lax',

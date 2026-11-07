@@ -1,8 +1,8 @@
-import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { Todo } from "../../todos/entities/todo.entity";
+import { Column } from 'typeorm/decorator/columns/Column.js';
+import { PrimaryGeneratedColumn } from 'typeorm/decorator/columns/PrimaryGeneratedColumn.js';
+import { Entity } from 'typeorm/decorator/entity/Entity.js';
 
-export type RoleType = 'user' | 'admin';
- const Role : RoleType[] = ['user', 'admin'];
+
 @Entity('users')
 export class User {
     @PrimaryGeneratedColumn('uuid') 
@@ -14,9 +14,7 @@ export class User {
     @Column({ select: false })
      passwordHash: string;
 
-    @Column({ type: 'enum', enum: Role , default: Role[0] })
-    role: RoleType;
+    @Column({ default: 0 })
+    refreshTokenVersion: number;
 
-    @OneToMany(() => Todo, (todo) => todo.owner)
-    todos: Todo[];
 }

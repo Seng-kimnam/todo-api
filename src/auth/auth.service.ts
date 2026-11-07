@@ -8,6 +8,7 @@ import * as argon2 from 'argon2';
 @Injectable()
 export class AuthService {
   private readonly refreshSecret: string;
+  private readonly refreshRevokedBefore = new Map<string, number>();
 
   constructor(private readonly jwt: JwtService ,
     @InjectRepository(User) private readonly userRepository: Repository<User>
@@ -25,7 +26,7 @@ export class AuthService {
   }
 
   async issueTokens(user: User, res: Response) {
-    const payload = { sub: user.id, role: user.role };
+    const payload = { sub: user.id, tokenVersion: user.refreshTokenVersion };
     const access = await this.jwt.signAsync(payload);
     const refresh = await this.jwt.signAsync(payload, {
       secret: this.refreshSecret,
@@ -40,21 +41,30 @@ export class AuthService {
     return { accessToken: access, refreshToken: refresh };
   }
 
-    async useRefresh(token: string): Promise<User> {
-      try {
-        const payload = await this.jwt.verifyAsync<{ sub: string }>(token, {
-          secret: this.refreshSecret,
-        });
+  async useRefresh(token: string): Promise<User> {
+    try {
+      const payload = await this.jwt.verifyAsync<{ sub: string; iat?: number }>(
+        token,
+        { secret: this.refreshSecret },
+      );
+      const revokedBefore = this.refreshRevokedBefore.get(payload.sub);
 
-        return await this.findOneByOrFail({ id: payload.sub });
-      } catch {
-        throw new UnauthorizedException('Invalid refresh token');
+      if (
+        revokedBefore !== undefined &&
+        (!payload.iat || payload.iat <= revokedBefore)
+      ) {
+        throw new UnauthorizedException('Refresh token has been revoked');
       }
-    }
 
-    findOneByOrFail(where: FindOptionsWhere<User>) {
-      return this.userRepository.findOneByOrFail(where);
+      return await this.findOneByOrFail({ id: payload.sub });
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
     }
+  }
+
+  findOneByOrFail(where: FindOptionsWhere<User>) {
+    return this.userRepository.findOneByOrFail(where);
+  }
   async validate(email: string, pw: string) {
     const user = await this.userRepository
       .createQueryBuilder('user')
@@ -73,5 +83,9 @@ export class AuthService {
   }
   async save(user: Partial<User>) {
     return this.userRepository.save(user);
+  } 
+
+  revokeAll(userId: string): void {
+    this.refreshRevokedBefore.set(userId, Math.floor(Date.now() / 1000));
   }
 }
